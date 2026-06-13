@@ -52,18 +52,18 @@ This benchmark measures API latency from **all four environments** to answer:
 
 ## 📊 Overall Comparison
 
-| Endpoint | Public Internet | Bastion | K8s Pod | PAWS |
-|---|---|---|---|---|
-| 🔵 REST /page/summary | **101 ms** | **33 ms** | **37 ms** | **71 ms** |
-| 🔵 REST /page/mobile-html (823KB) | **278 ms** | **64 ms** | **70 ms** | **99 ms** |
-| 🟢 Action API query (extracts) | **228 ms** | **81 ms** | **90 ms** | **117 ms** |
-| 🟢 Action API search | **450 ms** | **253 ms** | **235 ms** | **275 ms** |
-| 🟡 Pageviews API | **116 ms** | **34 ms** | **40 ms** | **64 ms** |
-| 🟠 Wikidata Entity (small, 501KB) | **410 ms** | **175 ms** | **192 ms** | **215 ms** |
-| 🟠 Wikidata Entity (large, 309KB) | **320 ms** | **155 ms** | **160 ms** | **169 ms** |
-| 🔴 Lift Wing ML | **105 ms** | **49 ms** | **47 ms** | **81 ms** |
-| 🟣 SPARQL simple (warm) | **~55 ms** | **~25 ms** | **~38 ms** | **~60 ms** |
-| 🟣 SPARQL complex (warm) | **~55 ms** | **~25 ms** | **~40 ms** | **~65 ms** |
+| Endpoint | Public Internet | Bastion | vs Public | K8s Pod | vs Public | PAWS | vs Public |
+|---|---|--:|--:|--:|--:|--:|--:|
+| 🔵 REST /page/summary | **101 ms** | **33 ms** | **3.1x** | **37 ms** | **2.7x** | **71 ms** | **1.4x** |
+| 🔵 REST /page/mobile-html (823KB) | **278 ms** | **64 ms** | **4.3x** | **70 ms** | **4.0x** | **99 ms** | **2.8x** |
+| 🟢 Action API query (extracts) | **228 ms** | **81 ms** | **2.8x** | **90 ms** | **2.5x** | **117 ms** | **1.9x** |
+| 🟢 Action API search | **450 ms** | **253 ms** | **1.8x** | **235 ms** | **1.9x** | **275 ms** | **1.6x** |
+| 🟡 Pageviews API | **116 ms** | **34 ms** | **3.4x** | **40 ms** | **2.9x** | **64 ms** | **1.8x** |
+| 🟠 Wikidata Entity (small, 501KB) | **410 ms** | **175 ms** | **2.3x** | **192 ms** | **2.1x** | **215 ms** | **1.9x** |
+| 🟠 Wikidata Entity (large, 309KB) | **320 ms** | **155 ms** | **2.1x** | **160 ms** | **2.0x** | **169 ms** | **1.9x** |
+| 🔴 Lift Wing ML | **105 ms** | **49 ms** | **2.1x** | **47 ms** | **2.2x** | **81 ms** | **1.3x** |
+| 🟣 SPARQL simple (warm) | **~55 ms** | **~25 ms** | **~2.2x** | **~38 ms** | **~1.4x** | **~60 ms** | **~0.9x** |
+| 🟣 SPARQL complex (warm) | **~55 ms** | **~25 ms** | **~2.2x** | **~40 ms** | **~1.4x** | **~65 ms** | **~0.8x** |
 
 **Bottom line:** All three WMF-hosted environments outperform the public
 internet. The bastion and K8s pod consistently score best, while PAWS
@@ -80,24 +80,24 @@ Different environments excel at different phases.
 
 ### DNS resolution
 
-| Location | DNS (avg) |
-|---|---|
-| Public Internet | 2-5 ms |
-| Bastion | 1.7 ms | fastest |
-| K8s Pod | 7.3-8.2 ms |
-| PAWS | 8.0-10.3 ms |
+| Location | DNS (avg) | vs Public |
+|---|---|--:|
+| Public Internet | 2-5 ms | — |
+| Bastion | 1.7 ms | **1.2-2.9x** |
+| K8s Pod | 7.3-8.2 ms | **0.3-0.6x** |
+| PAWS | 8.0-10.3 ms | **0.2-0.6x** |
 
 The bastion has the fastest DNS resolution. The K8s pod and PAWS both route
 through Kubernetes cluster DNS (CoreDNS), which adds ~6ms per lookup.
 
 ### TLS handshake
 
-| Location | TLS (avg) |
-|---|---|
-| Public Internet | 30-90 ms (high variance) |
-| Bastion | 26-29 ms |
-| K8s Pod | 24-28 ms |
-| PAWS | 50-58 ms |
+| Location | TLS (avg) | vs Public |
+|---|---|--:|
+| Public Internet | 30-90 ms | — |
+| Bastion | 26-29 ms | **1.2-3.1x** |
+| K8s Pod | 24-28 ms | **1.3-3.2x** |
+| PAWS | 50-58 ms | **0.5-1.6x** |
 
 The bastion and K8s pod have the fastest TLS handshakes at ~27ms. PAWS TLS
 is roughly double that at ~55ms. The public internet varies widely depending
@@ -107,12 +107,12 @@ data alone doesn't identify the root cause.
 
 ### Server processing time (TTFB)
 
-| Location | REST summary TTFB | Pageviews TTFB |
-|---|---|---|
-| Public Internet | 40.5 ms | 40.9 ms |
-| Bastion | 2.9 ms | 3.6 ms |
-| K8s Pod | 2.4 ms | 4.1 ms |
-| PAWS | 2.3 ms | 2.3 ms |
+| Location | REST summary TTFB | vs Public | Pageviews TTFB | vs Public |
+|---|---|--:|---|--:|
+| Public Internet | 40.5 ms | — | 40.9 ms | — |
+| Bastion | 2.9 ms | **14.0x** | 3.6 ms | **11.4x** |
+| K8s Pod | 2.4 ms | **16.9x** | 4.1 ms | **10.0x** |
+| PAWS | 2.3 ms | **17.6x** | 2.3 ms | **17.8x** |
 
 All three WMF-hosted environments see TTFB of ~2-4ms, confirming they are
 physically close to the WMF Varnish layer. The public internet adds ~38ms
@@ -120,12 +120,12 @@ of network round-trip time before the first byte arrives.
 
 ### Data transfer time
 
-| Location | Summary (5KB) | mobile-html (823KB) |
-|---|---|---|
-| Public Internet | 60.5 ms | 211.6 ms |
-| Bastion | 30.2 ms | 56.1 ms |
-| K8s Pod | 34.1 ms | 61.8 ms |
-| PAWS | 68.3 ms | 96.3 ms |
+| Location | Summary (5KB) | vs Public | mobile-html (823KB) | vs Public |
+|---|---|--:|---|--:|
+| Public Internet | 60.5 ms | — | 211.6 ms | — |
+| Bastion | 30.2 ms | **2.0x** | 56.1 ms | **3.8x** |
+| K8s Pod | 34.1 ms | **1.8x** | 61.8 ms | **3.4x** |
+| PAWS | 68.3 ms | **0.9x** | 96.3 ms | **2.2x** |
 
 The bastion and K8s pod have the fastest data transfer rates, roughly 2x
 faster than PAWS and 3-4x faster than the public internet for large payloads.
@@ -245,17 +245,17 @@ compute resource allocation — not geographic distance.
 
 ### Speed ranking by total response time
 
-Across all endpoints, the ranking is consistent:
+Averaged across all endpoints, the ranking is consistent:
 
-```
-1. Toolforge Bastion    33 ms  (fastest)
-2. K8s Pod              37 ms
-3. PAWS                 71 ms
-4. Public Internet     101 ms  (baseline)
-```
+| Rank | Environment | Avg total | vs Public Internet |
+|---|---|--:|--:|
+| 1 | **Toolforge Bastion** | **33 ms** | **3.1x** faster |
+| 2 | **K8s Pod** | **37 ms** | **2.7x** faster |
+| 3 | **PAWS** | **71 ms** | **1.4x** faster |
+| 4 | **Public Internet** | **101 ms** | — baseline |
 
 The gap between bastion and pod is small (~4ms). The gap between WMF-hosted
-environments and the public internet is large (2-4x).
+environments and the public internet is large (1.4-3.1x).
 
 ---
 

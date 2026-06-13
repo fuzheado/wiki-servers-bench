@@ -6,13 +6,50 @@
 
 ---
 
+## What This Is
+
+Wikipedia and its sister projects (Wikidata, Commons, Wiktionary, etc.) are
+run by the **Wikimedia Foundation (WMF)**. They host their servers in a
+handful of data centers around the world — the main ones being in northern
+Virginia (ashburn) and Texas. Developers in the community build tools that
+make automated requests to these servers: fetching article content, running
+SPARQL queries against Wikidata, checking pageviews, scoring edit quality,
+etc.
+
+If you're writing a tool that makes a lot of API calls, **every millisecond
+matters** — especially for batch jobs that might run thousands of requests.
+The speed you get depends on where your code runs.
+
+### Where can you run tools?
+
+The Wikimedia community operates **[Toolforge](https://wikitech.wikimedia.org/wiki/Portal:Toolforge)**,
+a free cloud platform where anyone can host tools and bots that interact with
+Wikimedia projects. There are two main ways to run code on Toolforge:
+
+| Environment | What it is | Pros | Cons |
+|---|---|---|---|
+| **🖥️ Bastion host** (`dev.toolforge.org`) | A shared Linux login server. You SSH in and run commands directly. | Simple, familiar, tmux for persistence | Shared with everyone (process limits!), idle processes killed after 30 min, system Python only |
+| **☸️ Kubernetes pod** | A lightweight container running on Toolforge's Kubernetes cluster. You `kubectl exec` into it. | Dedicated resources (CPU/RAM), stays alive indefinitely, you control the environment (Python version, packages, Node.js) | More setup, needs container image, slightly different networking (K8s DNS adds latency) |
+
+This benchmark compares both Toolforge environments against a "control group"
+of requests made from a residential internet connection (a MacBook Pro in the
+New York metro area).
+
+### The question we're asking
+
+> How much faster are Wikimedia API calls when you run inside the WMF network
+vs on the public internet? And does it matter whether you use the bastion
+or a Kubernetes pod?
+
+---
+
 ## 📍 The Three Locations
 
-| Location | Environment | Network | Baseline |
+| Location | Environment | Network | Role in this test |
 |---|---|---|---|
-| **🏠 Public Internet** | MacBookPro.home (NY metro) | Residential FiOS → ISP → WMF CDN | Control group |
-| **🖥️ Toolforge Bastion** | dev.toolforge.org (Ashburn, VA) | OpenStack VM (172.16.x.x) → NAT → WMF Varnish | Traditional inside-WMF |
-| **☸️ K8s Pod** | wagent-session (Ashburn, VA) | Kubernetes pod (192.168.x.x) → NAT → WMF Varnish | Future deployment target |
+| **🏠 Public Internet** | MacBookPro.home (NY metro) | Residential FiOS → ISP → WMF CDN | Control group — what a normal user gets |
+| **🖥️ Toolforge Bastion** | dev.toolforge.org (Ashburn, VA) | OpenStack VM (172.16.x.x) → NAT → WMF Varnish | "Classic" Toolforge — SSH + run commands |
+| **☸️ K8s Pod** | wagent-session (Ashburn, VA) | Kubernetes pod (192.168.x.x) → NAT → WMF Varnish | Modern Toolforge — container with managed runtimes |
 
 ---
 

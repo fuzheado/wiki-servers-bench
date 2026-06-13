@@ -1,0 +1,401 @@
+======================================================================
+🧪 WIKIMEDIA API BENCHMARK — Running from: jupyter--46uzheado
+   Iterations per endpoint: 10
+   Delay between requests:  0.5s
+======================================================================
+
+  ⏳ 🔵 REST /page/summary (small payload)
+    [1/10] ✅ 200 | total=81ms | ttfb=3ms | dns=20.0ms | tcp=1.4ms | tls=56.4ms | 4844 bytes
+    [2/10] ✅ 200 | total=70ms | ttfb=3ms | dns=11.1ms | tcp=0.9ms | tls=55.4ms | 4844 bytes
+    [3/10] ✅ 200 | total=68ms | ttfb=2ms | dns=11.5ms | tcp=1.1ms | tls=53.0ms | 4844 bytes
+    [4/10] ✅ 200 | total=83ms | ttfb=3ms | dns=9.5ms | tcp=1.1ms | tls=69.9ms | 4917 bytes
+    [5/10] ✅ 200 | total=65ms | ttfb=2ms | dns=9.1ms | tcp=1.0ms | tls=52.3ms | 4919 bytes
+    [6/10] ✅ 200 | total=76ms | ttfb=2ms | dns=8.7ms | tcp=1.0ms | tls=64.1ms | 4844 bytes
+    [7/10] ✅ 200 | total=88ms | ttfb=2ms | dns=6.4ms | tcp=2.4ms | tls=76.8ms | 4844 bytes
+    [8/10] ✅ 200 | total=65ms | ttfb=3ms | dns=8.1ms | tcp=1.0ms | tls=53.2ms | 4917 bytes
+    [9/10] ✅ 200 | total=50ms | ttfb=2ms | dns=5.8ms | tcp=0.8ms | tls=41.7ms | 4844 bytes
+    [10/10] ✅ 200 | total=61ms | ttfb=2ms | dns=7.5ms | tcp=1.0ms | tls=50.6ms | 4919 bytes
+  ✓ mean=70.6ms | ttfb=2.3ms | dns=9.8ms | tcp=1.2ms | tls=57.3ms | xfer=68.3ms | size=4874b
+
+  ⏳ 🔵 REST /page/mobile-html (large payload)
+    [1/10] ✅ 200 | total=91ms | ttfb=2ms | dns=7.0ms | tcp=0.9ms | tls=46.9ms | 822754 bytes
+    [2/10] ✅ 200 | total=109ms | ttfb=3ms | dns=10.4ms | tcp=1.0ms | tls=66.3ms | 822827 bytes
+    [3/10] ✅ 200 | total=104ms | ttfb=3ms | dns=9.2ms | tcp=1.1ms | tls=61.0ms | 822754 bytes
+    [4/10] ✅ 200 | total=107ms | ttfb=3ms | dns=9.3ms | tcp=1.0ms | tls=65.8ms | 822754 bytes
+    [5/10] ✅ 200 | total=90ms | ttfb=3ms | dns=8.1ms | tcp=0.9ms | tls=50.0ms | 822829 bytes
+    [6/10] ✅ 200 | total=98ms | ttfb=3ms | dns=7.9ms | tcp=1.2ms | tls=55.7ms | 822754 bytes
+    [7/10] ✅ 200 | total=96ms | ttfb=2ms | dns=8.5ms | tcp=0.9ms | tls=55.3ms | 822754 bytes
+    [8/10] ✅ 200 | total=91ms | ttfb=3ms | dns=8.3ms | tcp=1.2ms | tls=50.0ms | 822829 bytes
+    [9/10] ✅ 200 | total=99ms | ttfb=3ms | dns=7.3ms | tcp=1.1ms | tls=59.6ms | 822827 bytes
+    [10/10] ✅ 200 | total=105ms | ttfb=3ms | dns=8.5ms | tcp=1.0ms | tls=66.6ms | 822754 bytes
+  ✓ mean=99.0ms | ttfb=2.7ms | dns=8.5ms | tcp=1.0ms | tls=57.7ms | xfer=96.3ms | size=822784b
+
+  ⏳ 🟢 Action API query (extracts)
+    [1/10] ✅ 200 | total=116ms | ttfb=76ms | dns=5.5ms | tcp=0.7ms | tls=34.3ms | 5791 bytes
+    [2/10] ✅ 200 | total=108ms | ttfb=40ms | dns=8.1ms | tcp=1.3ms | tls=58.7ms | 5770 bytes
+    [3/10] ✅ 200 | total=104ms | ttfb=50ms | dns=8.4ms | tcp=0.8ms | tls=44.6ms | 5769 bytes
+    [4/10] ✅ 200 | total=126ms | ttfb=64ms | dns=9.5ms | tcp=1.2ms | tls=51.0ms | 5769 bytes
+    [5/10] ✅ 200 | total=114ms | ttfb=50ms | dns=10.0ms | tcp=1.0ms | tls=53.4ms | 5771 bytes
+    [6/10] ✅ 200 | total=141ms | ttfb=78ms | dns=11.5ms | tcp=1.1ms | tls=50.7ms | 5696 bytes
+    [7/10] ✅ 200 | total=117ms | ttfb=59ms | dns=7.9ms | tcp=0.9ms | tls=49.1ms | 5769 bytes
+    [8/10] ✅ 200 | total=135ms | ttfb=60ms | dns=7.7ms | tcp=0.9ms | tls=66.2ms | 5771 bytes
+    [9/10] ✅ 200 | total=106ms | ttfb=54ms | dns=9.7ms | tcp=1.4ms | tls=41.3ms | 5696 bytes
+    [10/10] ✅ 200 | total=101ms | ttfb=34ms | dns=8.3ms | tcp=1.0ms | tls=57.6ms | 5696 bytes
+  ✓ mean=116.9ms | ttfb=56.4ms | dns=8.7ms | tcp=1.0ms | tls=50.7ms | xfer=60.5ms | size=5750b
+
+  ⏳ 🟢 Action API search
+    [1/10] ✅ 200 | total=267ms | ttfb=201ms | dns=13.9ms | tcp=1.0ms | tls=51.5ms | 6021 bytes
+    [2/10] ✅ 200 | total=288ms | ttfb=224ms | dns=8.2ms | tcp=0.9ms | tls=55.6ms | 5999 bytes
+    [3/10] ✅ 200 | total=274ms | ttfb=210ms | dns=9.6ms | tcp=1.3ms | tls=52.9ms | 6090 bytes
+    [4/10] ✅ 200 | total=257ms | ttfb=195ms | dns=8.7ms | tcp=1.3ms | tls=51.5ms | 5999 bytes
+    [5/10] ✅ 200 | total=243ms | ttfb=184ms | dns=6.8ms | tcp=0.8ms | tls=51.4ms | 6163 bytes
+    [6/10] ✅ 200 | total=283ms | ttfb=218ms | dns=9.9ms | tcp=0.9ms | tls=53.8ms | 5979 bytes
+    [7/10] ✅ 200 | total=222ms | ttfb=161ms | dns=7.1ms | tcp=0.9ms | tls=52.3ms | 6053 bytes
+    [8/10] ✅ 200 | total=378ms | ttfb=313ms | dns=6.0ms | tcp=0.8ms | tls=58.2ms | 6072 bytes
+    [9/10] ✅ 200 | total=251ms | ttfb=194ms | dns=4.9ms | tcp=0.9ms | tls=50.8ms | 5999 bytes
+    [10/10] ✅ 200 | total=286ms | ttfb=229ms | dns=7.2ms | tcp=0.7ms | tls=49.2ms | 6165 bytes
+  ✓ mean=274.9ms | ttfb=212.9ms | dns=8.2ms | tcp=1.0ms | tls=52.7ms | xfer=62.0ms | size=6054b
+
+  ⏳ 🟣 SPARQL (simple query)
+    [1/10] ✅ 200 | total=11226ms | ttfb=11163ms | dns=11.6ms | tcp=1.1ms | tls=49.9ms | 3699 bytes
+    [2/10] ✅ 200 | total=72ms | ttfb=3ms | dns=11.6ms | tcp=1.0ms | tls=56.0ms | 3686 bytes
+    [3/10] ✅ 200 | total=62ms | ttfb=3ms | dns=8.5ms | tcp=0.6ms | tls=49.9ms | 3668 bytes
+    [4/10] ✅ 200 | total=65ms | ttfb=3ms | dns=9.8ms | tcp=0.9ms | tls=51.8ms | 3686 bytes
+    [5/10] ✅ 200 | total=63ms | ttfb=3ms | dns=6.8ms | tcp=1.2ms | tls=52.3ms | 3686 bytes
+    [6/10] ✅ 200 | total=39ms | ttfb=2ms | dns=6.9ms | tcp=0.9ms | tls=28.6ms | 3686 bytes
+    [7/10] ✅ 200 | total=55ms | ttfb=3ms | dns=7.1ms | tcp=0.6ms | tls=44.8ms | 3668 bytes
+    [8/10] ✅ 200 | total=63ms | ttfb=3ms | dns=7.0ms | tcp=0.9ms | tls=51.3ms | 3668 bytes
+    [9/10] ✅ 200 | total=72ms | ttfb=2ms | dns=7.4ms | tcp=1.0ms | tls=60.9ms | 3686 bytes
+    [10/10] ✅ 200 | total=66ms | ttfb=2ms | dns=9.0ms | tcp=0.9ms | tls=54.1ms | 3668 bytes
+  ✓ mean=1178.3ms | ttfb=1118.8ms | dns=8.6ms | tcp=0.9ms | tls=50.0ms | xfer=59.5ms | size=3680b
+
+  ⏳ 🟣 SPARQL (complex query)
+    [1/10] ✅ 200 | total=3711ms | ttfb=3676ms | dns=6.3ms | tcp=0.9ms | tls=27.9ms | 15583 bytes
+    [2/10] ✅ 200 | total=63ms | ttfb=3ms | dns=8.0ms | tcp=0.9ms | tls=51.2ms | 15570 bytes
+    [3/10] ✅ 200 | total=63ms | ttfb=3ms | dns=9.2ms | tcp=1.0ms | tls=50.0ms | 15570 bytes
+    [4/10] ✅ 200 | total=63ms | ttfb=4ms | dns=7.4ms | tcp=0.7ms | tls=50.8ms | 15570 bytes
+    [5/10] ✅ 200 | total=63ms | ttfb=4ms | dns=5.7ms | tcp=1.1ms | tls=51.9ms | 15570 bytes
+    [6/10] ✅ 200 | total=70ms | ttfb=3ms | dns=8.2ms | tcp=1.0ms | tls=58.0ms | 15570 bytes
+    [7/10] ✅ 200 | total=66ms | ttfb=3ms | dns=6.7ms | tcp=0.9ms | tls=55.3ms | 15570 bytes
+    [8/10] ✅ 200 | total=80ms | ttfb=3ms | dns=8.1ms | tcp=1.1ms | tls=67.5ms | 15570 bytes
+    [9/10] ✅ 200 | total=75ms | ttfb=3ms | dns=9.3ms | tcp=1.1ms | tls=62.0ms | 15570 bytes
+    [10/10] ✅ 200 | total=68ms | ttfb=4ms | dns=10.0ms | tcp=1.2ms | tls=52.5ms | 15570 bytes
+  ✓ mean=432.2ms | ttfb=370.5ms | dns=7.9ms | tcp=1.0ms | tls=52.7ms | xfer=61.7ms | size=15571b
+
+  ⏳ 🟡 Pageviews API
+    [1/10] ✅ 200 | total=57ms | ttfb=2ms | dns=19.8ms | tcp=0.7ms | tls=34.5ms | 2912 bytes
+    [2/10] ✅ 200 | total=74ms | ttfb=2ms | dns=12.0ms | tcp=0.9ms | tls=59.0ms | 2912 bytes
+    [3/10] ✅ 200 | total=73ms | ttfb=2ms | dns=11.0ms | tcp=1.2ms | tls=58.6ms | 2912 bytes
+    [4/10] ✅ 200 | total=64ms | ttfb=3ms | dns=7.9ms | tcp=0.9ms | tls=52.8ms | 2912 bytes
+    [5/10] ✅ 200 | total=60ms | ttfb=2ms | dns=7.7ms | tcp=0.8ms | tls=48.8ms | 2912 bytes
+    [6/10] ✅ 200 | total=66ms | ttfb=2ms | dns=7.3ms | tcp=1.1ms | tls=55.0ms | 2912 bytes
+    [7/10] ✅ 200 | total=58ms | ttfb=2ms | dns=7.4ms | tcp=0.8ms | tls=47.6ms | 2912 bytes
+    [8/10] ✅ 200 | total=62ms | ttfb=2ms | dns=8.3ms | tcp=0.9ms | tls=50.4ms | 2912 bytes
+    [9/10] ✅ 200 | total=66ms | ttfb=2ms | dns=9.7ms | tcp=0.8ms | tls=53.1ms | 2912 bytes
+    [10/10] ✅ 200 | total=64ms | ttfb=2ms | dns=9.7ms | tcp=0.8ms | tls=51.4ms | 2912 bytes
+  ✓ mean=64.4ms | ttfb=2.3ms | dns=10.1ms | tcp=0.9ms | tls=51.1ms | xfer=62.1ms | size=2912b
+
+  ⏳ 🟠 Wikidata Entity API (small entity)
+    [1/10] ✅ 200 | total=226ms | ttfb=141ms | dns=13.8ms | tcp=0.9ms | tls=52.4ms | 501398 bytes
+    [2/10] ✅ 200 | total=230ms | ttfb=152ms | dns=9.8ms | tcp=1.0ms | tls=49.5ms | 501376 bytes
+    [3/10] ✅ 200 | total=238ms | ttfb=132ms | dns=8.3ms | tcp=1.1ms | tls=78.0ms | 501376 bytes
+    [4/10] ✅ 200 | total=224ms | ttfb=147ms | dns=8.1ms | tcp=0.9ms | tls=50.9ms | 501376 bytes
+    [5/10] ✅ 200 | total=213ms | ttfb=144ms | dns=4.9ms | tcp=1.1ms | tls=41.0ms | 501376 bytes
+    [6/10] ✅ 200 | total=233ms | ttfb=168ms | dns=7.6ms | tcp=0.9ms | tls=38.2ms | 501376 bytes
+    [7/10] ✅ 200 | total=237ms | ttfb=154ms | dns=7.4ms | tcp=1.1ms | tls=55.4ms | 501376 bytes
+    [8/10] ✅ 200 | total=155ms | ttfb=80ms | dns=8.0ms | tcp=0.8ms | tls=46.6ms | 501376 bytes
+    [9/10] ✅ 200 | total=156ms | ttfb=80ms | dns=7.2ms | tcp=0.8ms | tls=48.9ms | 501376 bytes
+    [10/10] ✅ 200 | total=238ms | ttfb=133ms | dns=9.5ms | tcp=1.1ms | tls=76.9ms | 501376 bytes
+  ✓ mean=215.0ms | ttfb=133.1ms | dns=8.4ms | tcp=1.0ms | tls=53.8ms | xfer=82.0ms | size=501378b
+
+  ⏳ 🟠 Wikidata Entity API (large entity)
+    [1/10] ✅ 200 | total=154ms | ttfb=83ms | dns=7.5ms | tcp=1.0ms | tls=53.0ms | 309219 bytes
+    [2/10] ✅ 200 | total=219ms | ttfb=132ms | dns=7.0ms | tcp=1.0ms | tls=69.1ms | 309219 bytes
+    [3/10] ✅ 200 | total=145ms | ttfb=75ms | dns=7.7ms | tcp=0.9ms | tls=51.7ms | 309219 bytes
+    [4/10] ✅ 200 | total=157ms | ttfb=69ms | dns=9.0ms | tcp=1.0ms | tls=68.2ms | 309219 bytes
+    [5/10] ✅ 200 | total=155ms | ttfb=82ms | dns=7.6ms | tcp=0.8ms | tls=54.7ms | 309219 bytes
+    [6/10] ✅ 200 | total=151ms | ttfb=78ms | dns=8.4ms | tcp=1.1ms | tls=54.3ms | 309219 bytes
+    [7/10] ✅ 200 | total=139ms | ttfb=70ms | dns=7.0ms | tcp=1.0ms | tls=52.2ms | 309219 bytes
+    [8/10] ✅ 200 | total=242ms | ttfb=167ms | dns=9.1ms | tcp=1.1ms | tls=55.9ms | 309219 bytes
+    [9/10] ✅ 200 | total=146ms | ttfb=75ms | dns=8.4ms | tcp=0.9ms | tls=51.6ms | 309219 bytes
+    [10/10] ✅ 200 | total=181ms | ttfb=108ms | dns=7.9ms | tcp=1.2ms | tls=54.9ms | 309219 bytes
+  ✓ mean=169.0ms | ttfb=94.0ms | dns=8.0ms | tcp=1.0ms | tls=56.6ms | xfer=75.0ms | size=309219b
+
+  ⏳ 🔴 Lift Wing ML (revert risk)
+    [1/10] ✅ 404 | total=90ms | ttfb=17ms | dns=18.5ms | tcp=1.0ms | tls=53.8ms | 1037 bytes
+    [2/10] ✅ 404 | total=76ms | ttfb=11ms | dns=10.6ms | tcp=0.8ms | tls=53.8ms | 1037 bytes
+    [3/10] ✅ 404 | total=78ms | ttfb=13ms | dns=10.4ms | tcp=1.0ms | tls=52.8ms | 1037 bytes
+    [4/10] ✅ 404 | total=83ms | ttfb=18ms | dns=10.6ms | tcp=1.3ms | tls=52.8ms | 1037 bytes
+    [5/10] ✅ 404 | total=79ms | ttfb=18ms | dns=9.7ms | tcp=1.5ms | tls=49.8ms | 1037 bytes
+    [6/10] ✅ 404 | total=81ms | ttfb=17ms | dns=8.5ms | tcp=1.0ms | tls=54.6ms | 1037 bytes
+    [7/10] ✅ 404 | total=91ms | ttfb=16ms | dns=8.1ms | tcp=0.9ms | tls=65.7ms | 1037 bytes
+    [8/10] ✅ 404 | total=59ms | ttfb=9ms | dns=8.3ms | tcp=0.8ms | tls=40.4ms | 1037 bytes
+    [9/10] ✅ 404 | total=84ms | ttfb=17ms | dns=7.7ms | tcp=0.6ms | tls=58.7ms | 1037 bytes
+    [10/10] ✅ 404 | total=92ms | ttfb=25ms | dns=10.9ms | tcp=1.2ms | tls=54.7ms | 1037 bytes
+  ✓ mean=81.3ms | ttfb=16.2ms | dns=10.3ms | tcp=1.0ms | tls=53.7ms | xfer=65.2ms | size=1037b
+
+
+📋 DETAILED: jupyter--46uzheado
+[
+  {
+    "name": "\ud83d\udd35 REST /page/summary (small payload)",
+    "count": 10,
+    "total_ms": {
+      "min": 50.1,
+      "max": 87.9,
+      "mean": 70.6,
+      "stdev": 11.41
+    },
+    "dns_ms": {
+      "mean": 9.8
+    },
+    "connect_ms": {
+      "mean": 1.2
+    },
+    "tls_ms": {
+      "mean": 57.3
+    },
+    "ttfb_ms": {
+      "mean": 2.3
+    },
+    "transfer_ms": {
+      "mean": 68.3
+    },
+    "avg_response_size_bytes": 4874
+  },
+  {
+    "name": "\ud83d\udd35 REST /page/mobile-html (large payload)",
+    "count": 10,
+    "total_ms": {
+      "min": 90.0,
+      "max": 109.0,
+      "mean": 99.0,
+      "stdev": 7.07
+    },
+    "dns_ms": {
+      "mean": 8.5
+    },
+    "connect_ms": {
+      "mean": 1.0
+    },
+    "tls_ms": {
+      "mean": 57.7
+    },
+    "ttfb_ms": {
+      "mean": 2.7
+    },
+    "transfer_ms": {
+      "mean": 96.3
+    },
+    "avg_response_size_bytes": 822784
+  },
+  {
+    "name": "\ud83d\udfe2 Action API query (extracts)",
+    "count": 10,
+    "total_ms": {
+      "min": 100.9,
+      "max": 141.1,
+      "mean": 116.9,
+      "stdev": 13.45
+    },
+    "dns_ms": {
+      "mean": 8.7
+    },
+    "connect_ms": {
+      "mean": 1.0
+    },
+    "tls_ms": {
+      "mean": 50.7
+    },
+    "ttfb_ms": {
+      "mean": 56.4
+    },
+    "transfer_ms": {
+      "mean": 60.5
+    },
+    "avg_response_size_bytes": 5750
+  },
+  {
+    "name": "\ud83d\udfe2 Action API search",
+    "count": 10,
+    "total_ms": {
+      "min": 221.6,
+      "max": 378.3,
+      "mean": 274.9,
+      "stdev": 42.03
+    },
+    "dns_ms": {
+      "mean": 8.2
+    },
+    "connect_ms": {
+      "mean": 1.0
+    },
+    "tls_ms": {
+      "mean": 52.7
+    },
+    "ttfb_ms": {
+      "mean": 212.9
+    },
+    "transfer_ms": {
+      "mean": 62.0
+    },
+    "avg_response_size_bytes": 6054
+  },
+  {
+    "name": "\ud83d\udfe3 SPARQL (simple query)",
+    "count": 10,
+    "total_ms": {
+      "min": 38.8,
+      "max": 11226.1,
+      "mean": 1178.3,
+      "stdev": 3530.45
+    },
+    "dns_ms": {
+      "mean": 8.6
+    },
+    "connect_ms": {
+      "mean": 0.9
+    },
+    "tls_ms": {
+      "mean": 50.0
+    },
+    "ttfb_ms": {
+      "mean": 1118.8
+    },
+    "transfer_ms": {
+      "mean": 59.5
+    },
+    "avg_response_size_bytes": 3680
+  },
+  {
+    "name": "\ud83d\udfe3 SPARQL (complex query)",
+    "count": 10,
+    "total_ms": {
+      "min": 62.7,
+      "max": 3711.1,
+      "mean": 432.2,
+      "stdev": 1152.1
+    },
+    "dns_ms": {
+      "mean": 7.9
+    },
+    "connect_ms": {
+      "mean": 1.0
+    },
+    "tls_ms": {
+      "mean": 52.7
+    },
+    "ttfb_ms": {
+      "mean": 370.5
+    },
+    "transfer_ms": {
+      "mean": 61.7
+    },
+    "avg_response_size_bytes": 15571
+  },
+  {
+    "name": "\ud83d\udfe1 Pageviews API",
+    "count": 10,
+    "total_ms": {
+      "min": 57.0,
+      "max": 74.0,
+      "mean": 64.4,
+      "stdev": 5.71
+    },
+    "dns_ms": {
+      "mean": 10.1
+    },
+    "connect_ms": {
+      "mean": 0.9
+    },
+    "tls_ms": {
+      "mean": 51.1
+    },
+    "ttfb_ms": {
+      "mean": 2.3
+    },
+    "transfer_ms": {
+      "mean": 62.1
+    },
+    "avg_response_size_bytes": 2912
+  },
+  {
+    "name": "\ud83d\udfe0 Wikidata Entity API (small entity)",
+    "count": 10,
+    "total_ms": {
+      "min": 155.0,
+      "max": 237.8,
+      "mean": 215.0,
+      "stdev": 32.22
+    },
+    "dns_ms": {
+      "mean": 8.4
+    },
+    "connect_ms": {
+      "mean": 1.0
+    },
+    "tls_ms": {
+      "mean": 53.8
+    },
+    "ttfb_ms": {
+      "mean": 133.1
+    },
+    "transfer_ms": {
+      "mean": 82.0
+    },
+    "avg_response_size_bytes": 501378
+  },
+  {
+    "name": "\ud83d\udfe0 Wikidata Entity API (large entity)",
+    "count": 10,
+    "total_ms": {
+      "min": 139.4,
+      "max": 242.2,
+      "mean": 169.0,
+      "stdev": 34.87
+    },
+    "dns_ms": {
+      "mean": 8.0
+    },
+    "connect_ms": {
+      "mean": 1.0
+    },
+    "tls_ms": {
+      "mean": 56.6
+    },
+    "ttfb_ms": {
+      "mean": 94.0
+    },
+    "transfer_ms": {
+      "mean": 75.0
+    },
+    "avg_response_size_bytes": 309219
+  },
+  {
+    "name": "\ud83d\udd34 Lift Wing ML (revert risk)",
+    "count": 10,
+    "total_ms": {
+      "min": 59.1,
+      "max": 91.7,
+      "mean": 81.3,
+      "stdev": 9.56
+    },
+    "dns_ms": {
+      "mean": 10.3
+    },
+    "connect_ms": {
+      "mean": 1.0
+    },
+    "tls_ms": {
+      "mean": 53.7
+    },
+    "ttfb_ms": {
+      "mean": 16.2
+    },
+    "transfer_ms": {
+      "mean": 65.2
+    },
+    "avg_response_size_bytes": 1037
+  }
+]
+

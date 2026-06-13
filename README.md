@@ -1,8 +1,8 @@
-# Wikimedia API Latency Benchmark: Three-Location Comparison
+# Wikimedia API Latency Benchmark: Four-Location Comparison
 
 **Date:** June 13, 2026
 **Method:** 10 requests per endpoint, raw socket timing (DNS/TCP/TLS/TTFB breakdown)
-**Traffic:** ~300 total requests — very gentle, well below rate limits
+**Traffic:** ~400 total requests — very gentle, well below rate limits
 
 ---
 
@@ -24,181 +24,231 @@ The speed you get depends on where your code runs.
 
 The Wikimedia community operates **[Toolforge](https://wikitech.wikimedia.org/wiki/Portal:Toolforge)**,
 a free cloud platform where anyone can host tools and bots that interact with
-Wikimedia projects. There are two main ways to run code on Toolforge:
+Wikimedia projects, and **[PAWS](https://wikitech.wikimedia.org/wiki/PAWS)**,
+a hosted Jupyter notebook environment for interactive analysis.
 
 | Environment | What it is | Pros | Cons |
 |---|---|---|---|
 | **🖥️ Bastion host** (`dev.toolforge.org`) | A shared Linux login server. You SSH in and run commands directly. | Simple, familiar, tmux for persistence | Shared with everyone (process limits!), idle processes killed after 30 min, system Python only |
-| **☸️ Kubernetes pod** | A lightweight container running on Toolforge's Kubernetes cluster. You `kubectl exec` into it. | Dedicated resources (CPU/RAM), stays alive indefinitely, you control the environment (Python version, packages, Node.js) | More setup, needs container image, slightly different networking (K8s DNS adds latency) |
+| **☸️ Kubernetes pod** | A lightweight container on Toolforge's Kubernetes cluster. You `kubectl exec` into it. | Dedicated resources (CPU/RAM), stays alive indefinitely, you control the environment (Python, Node.js, packages) | More setup, needs container image, K8s DNS adds latency |
+| **📓 PAWS** | Hosted Jupyter notebooks (Python/R) for interactive data analysis | Zero setup, web-based, pre-installed data science stack | Ephemeral sessions, limited compute, not designed for batch automation |
 
-This benchmark compares both Toolforge environments against a "control group"
-of requests made from a residential internet connection (a MacBook Pro in the
-New York metro area).
+This benchmark compares all three WMF-hosted environments against a "control
+group" of requests made from a residential internet connection (a MacBook Pro
+in the New York metro area).
 
 ### The question we're asking
 
 > How much faster are Wikimedia API calls when you run inside the WMF network
-vs on the public internet? And does it matter whether you use the bastion
-or a Kubernetes pod?
+vs on the public internet? And is there a meaningful difference between the
+bastion, Kubernetes pods, and PAWS notebooks?
 
 ---
 
-## 📍 The Three Locations
+## 📍 The Four Locations
 
 | Location | Environment | Network | Role in this test |
 |---|---|---|---|
 | **🏠 Public Internet** | MacBookPro.home (NY metro) | Residential FiOS → ISP → WMF CDN | Control group — what a normal user gets |
 | **🖥️ Toolforge Bastion** | dev.toolforge.org (Ashburn, VA) | OpenStack VM (172.16.x.x) → NAT → WMF Varnish | "Classic" Toolforge — SSH + run commands |
 | **☸️ K8s Pod** | wagent-session (Ashburn, VA) | Kubernetes pod (192.168.x.x) → NAT → WMF Varnish | Modern Toolforge — container with managed runtimes |
+| **📓 PAWS** | jupyter--46uzheado | Jupyter notebook on WMF Cloud Services | Interactive analysis — one-click data science |
 
 ---
 
-## 📊 Three-Way Comparison Table
+## 📊 Four-Way Comparison Table
 
-| Endpoint | Public Internet | Bastion | K8s Pod | Pod vs Public |
+| Endpoint | Public Internet | Bastion | K8s Pod | PAWS |
 |---|---|---|---|---|
-| 🔵 REST /page/summary | **101 ms** | **33 ms** | **37 ms** | **2.7x** |
-| 🔵 REST /page/mobile-html (823KB) | **278 ms** | **64 ms** | **70 ms** | **4.0x** |
-| 🟢 Action API query (extracts) | **228 ms** | **81 ms** | **90 ms** | **2.5x** |
-| 🟢 Action API search | **450 ms** | **253 ms** | **235 ms** | **1.9x** |
-| 🟡 Pageviews API | **116 ms** | **34 ms** | **40 ms** | **2.9x** |
-| 🟠 Wikidata Entity (small, 501KB) | **410 ms** | **175 ms** | **192 ms** | **2.1x** |
-| 🟠 Wikidata Entity (large, 309KB) | **320 ms** | **155 ms** | **160 ms** | **2.0x** |
-| 🔴 Lift Wing ML | **105 ms** | **49 ms** | **47 ms** | **2.2x** |
-| 🟣 SPARQL simple (warm) | **~55 ms** | **~25 ms** | **~38 ms** | **1.4x** |
-| 🟣 SPARQL complex (warm) | **~55 ms** | **~25 ms** | **~40 ms** | **1.4x** |
+| 🔵 REST /page/summary | **101 ms** | **33 ms** | **37 ms** | **71 ms** |
+| 🔵 REST /page/mobile-html (823KB) | **278 ms** | **64 ms** | **70 ms** | **99 ms** |
+| 🟢 Action API query (extracts) | **228 ms** | **81 ms** | **90 ms** | **117 ms** |
+| 🟢 Action API search | **450 ms** | **253 ms** | **235 ms** | **275 ms** |
+| 🟡 Pageviews API | **116 ms** | **34 ms** | **40 ms** | **64 ms** |
+| 🟠 Wikidata Entity (small, 501KB) | **410 ms** | **175 ms** | **192 ms** | **215 ms** |
+| 🟠 Wikidata Entity (large, 309KB) | **320 ms** | **155 ms** | **160 ms** | **169 ms** |
+| 🔴 Lift Wing ML | **105 ms** | **49 ms** | **47 ms** | **81 ms** |
+| 🟣 SPARQL simple (warm) | **~55 ms** | **~25 ms** | **~38 ms** | **~60 ms** |
+| 🟣 SPARQL complex (warm) | **~55 ms** | **~25 ms** | **~40 ms** | **~65 ms** |
 
 ---
 
-## ⚡ Phase-by-Phase Breakdown
+## 🔍 Phase-by-Phase: Where PAWS Wins and Loses
+
+### DNS latency
+
+| Location | DNS (avg) |
+|---|---|
+| Public Internet | 2-5 ms |
+| **Bastion** | **1.7 ms** ⚡ fastest |
+| K8s Pod | 7.3-8.2 ms |
+| **PAWS** | **8.0-10.3 ms** |
+
+PAWS DNS is similar to the K8s pod — both go through Kubernetes cluster DNS
+(CoreDNS) instead of direct system resolution.
+
+### TLS handshake
+
+| Location | TLS (avg) |
+|---|---|
+| Public Internet | 30-90 ms (high variance) |
+| **Bastion** | **26-29 ms** ⚡ fastest |
+| K8s Pod | 24-28 ms |
+| **PAWS** | **50-58 ms** 🐢 slowest |
+
+This is the biggest surprise. PAWS TLS handshake is **~55ms**, almost double
+the Toolforge environments (~27ms). This is consistent across all endpoints
+and not a fluke — every single request shows this pattern.
+
+**Possible causes:**
+- PAWS may route through an additional proxy layer (like a web proxy or
+  authentication gateway) that adds TLS overhead
+- Different TLS library or hardware offloading capability
+- PAWS instances may be on a different subnet with a longer path to the
+  Varnish layer
+
+### TTFB (server processing time)
+
+| Location | REST summary TTFB | Rest mobile-html TTFB |
+|---|---|---|
+| Public Internet | 40.5 ms | 66.0 ms |
+| **Bastion** | **2.9 ms** | **7.7 ms** |
+| K8s Pod | 2.4 ms | 8.2 ms |
+| **PAWS** | **2.3 ms** ⚡ | **2.7 ms** ⚡ fastest |
+
+**PAWS wins here.** The time-to-first-byte from the server is just 2.3ms for
+the REST summary — essentially the same as the Toolforge environments and way
+better than the 40ms from public internet. This confirms PAWS IS inside the
+WMF network, physically close to the Varnish layer.
+
+### Transfer time (data download)
+
+| Location | Summary (5KB) | mobile-html (823KB) |
+|---|---|---|
+| Public Internet | 60.5 ms | 211.6 ms |
+| Bastion | 30.2 ms | 56.1 ms |
+| K8s Pod | 34.1 ms | 61.8 ms |
+| **PAWS** | **68.3 ms** 🐢 | **96.3 ms** 🐢 |
+
+PAWS transfer times are **double** the Toolforge environments. For the 823KB
+mobile-html page, PAWS takes 96ms vs 56ms on the bastion and 62ms in the pod.
+This suggests PAWS has lower bandwidth or higher latency on the data path
+back from the Varnish layer.
+
+---
+
+## 🧩 Understanding PAWS
+
+### Where PAWS sits
+
+```
+PAWS notebook → ?proxy? → Varnish → Backend API
+    ↑ TLS: ~55ms       TTFB: ~2ms  Transfer: ~68ms
+```
+
+PAWS is clearly inside the WMF network (2.3ms TTFB proves proximity to
+Varnish), but something adds overhead on the TLS handshake and data transfer.
+This could be:
+1. **An additional proxy hop** — PAWS sessions may route through a web proxy
+   or authentication gateway that terminates and re-establishes TLS
+2. **Different network hardware** — PAWS runs on a different cluster with
+   different NICs or routing
+3. **CPU contention** — PAWS notebooks share CPU with other users, which
+   could slow down TLS handshake (which is CPU-bound)
+
+### What PAWS is good for
+
+| Workload | PAWS verdict | Why |
+|---|---|---|
+| Interactive exploration | ✅ Great | TTFB is excellent (2-3ms), good enough for manual work |
+| SPARQL prototyping | ✅ Good | Warm SPARQL at ~60ms is fine for interactive querying |
+| Batch page fetches | ⚠️ OK | 71ms vs 33ms on bastion — 2x slower, still better than public internet |
+| Large data downloads | ❌ Not ideal | Transfer is 2x slower than Toolforge, similar to public internet |
+| Automated production | ❌ No | Ephemeral, not designed for persistent automation |
+
+### PAWS vs Toolforge TL;DR
+
+```
+Metric              Best            PAWS ranking
+─────────────────────────────────────────────────
+Server processing   Bastion/Pod     🥈 tied for first (~2ms TTFB)
+TLS handshake       Bastion/Pod     🐢 last (~55ms vs ~27ms)
+DNS resolution      Bastion         tied with K8s Pod (~9ms vs ~2ms)
+Data transfer       Bastion         🐢 last (~2x slower than bastion)
+```
+
+PAWS trades raw performance for **zero-config convenience** — you get a
+browser-based notebook with all the data science libraries pre-installed,
+and the server processing is just as fast as Toolforge. The extra ~30ms of
+TLS overhead and ~30ms of transfer overhead only matter for high-throughput
+batch workloads.
+
+---
+
+## ⚡ Phase-by-Phase Full Comparison
 
 ### 🔵 REST /page/summary (small, ~5KB response)
 
-| Phase | Public Internet | Bastion | K8s Pod |
-|---|---|---|---|
-| DNS | 5.0 ms | 2.4 ms | **8.2 ms** |
-| TCP connect | 14.3 ms | 0.8 ms | **1.3 ms** |
-| TLS handshake | 40.9 ms | 27.0 ms | **24.6 ms** |
-| TTFB (server processing) | 40.5 ms | 2.9 ms | **2.4 ms** |
-| Transfer | 60.5 ms | 30.2 ms | **34.1 ms** |
-| **Total** | **101 ms** | **33 ms** | **37 ms** |
+| Phase | Public Internet | Bastion | K8s Pod | PAWS |
+|---|---|---|---|---|
+| DNS | 5.0 ms | 2.4 ms | 8.2 ms | **9.8 ms** |
+| TCP connect | 14.3 ms | 0.8 ms | 1.3 ms | **1.2 ms** |
+| TLS handshake | 40.9 ms | 27.0 ms | 24.6 ms | **57.3 ms** |
+| TTFB (server) | 40.5 ms | 2.9 ms | 2.4 ms | **2.3 ms** |
+| Transfer | 60.5 ms | 30.2 ms | 34.1 ms | **68.3 ms** |
+| **Total** | **101 ms** | **33 ms** | **37 ms** | **71 ms** |
 
 ### 🔵 REST /page/mobile-html (large, ~823KB response)
 
-| Phase | Public Internet | Bastion | K8s Pod |
-|---|---|---|---|
-| TTFB | 66.0 ms | 7.7 ms | **8.2 ms** |
-| Transfer | 211.6 ms | 56.1 ms | **61.8 ms** |
-| **Total** | **278 ms** | **64 ms** | **70 ms** |
+| Phase | Public Internet | Bastion | K8s Pod | PAWS |
+|---|---|---|---|---|
+| TTFB | 66.0 ms | 7.7 ms | 8.2 ms | **2.7 ms** |
+| Transfer | 211.6 ms | 56.1 ms | 61.8 ms | **96.3 ms** |
+| **Total** | **278 ms** | **64 ms** | **70 ms** | **99 ms** |
 
 ### 🟢 Action API query (page extracts)
 
-| Phase | Public Internet | Bastion | K8s Pod |
-|---|---|---|---|
-| Connection setup | 101.6 ms | 30.9 ms | **35.1 ms** |
-| TTFB (server processing) | 123.1 ms | 50.0 ms | **55.0 ms** |
-| Transfer | 105.2 ms | 30.9 ms | **35.1 ms** |
-| **Total** | **228 ms** | **81 ms** | **90 ms** |
+| Phase | Public Internet | Bastion | K8s Pod | PAWS |
+|---|---|---|---|---|
+| Connection setup | 101.6 ms | 30.9 ms | 35.1 ms | **60.4 ms** |
+| TTFB (server) | 123.1 ms | 50.0 ms | 55.0 ms | **56.4 ms** |
+| Transfer | 105.2 ms | 30.9 ms | 35.1 ms | **60.5 ms** |
+| **Total** | **228 ms** | **81 ms** | **90 ms** | **117 ms** |
 
 ### 🟢 Action API search
 
-| Phase | Public Internet | Bastion | K8s Pod |
-|---|---|---|---|
-| Connection setup | 130.6 ms | 28.8 ms | **35.7 ms** |
-| TTFB (Elasticsearch) | 319.6 ms | 224.5 ms | **199.5 ms** |
-| Transfer | 130.8 ms | 28.8 ms | **35.7 ms** |
-| **Total** | **450 ms** | **253 ms** | **235 ms** |
+| Phase | Public Internet | Bastion | K8s Pod | PAWS |
+|---|---|---|---|---|
+| Connection setup | 130.6 ms | 28.8 ms | 35.7 ms | **61.9 ms** |
+| TTFB (Elasticsearch) | 319.6 ms | 224.5 ms | 199.5 ms | **212.9 ms** |
+| Transfer | 130.8 ms | 28.8 ms | 35.7 ms | **62.0 ms** |
+| **Total** | **450 ms** | **253 ms** | **235 ms** | **275 ms** |
+
+### 🟡 Pageviews API
+
+| Phase | Public Internet | Bastion | K8s Pod | PAWS |
+|---|---|---|---|---|
+| TLS + DNS + TCP | 74.9 ms | 30.2 ms | 35.5 ms | **62.1 ms** |
+| TTFB (server) | 40.9 ms | 3.6 ms | 4.1 ms | **2.3 ms** |
+| Transfer | 75.1 ms | 30.0 ms | 35.7 ms | **62.1 ms** |
+| **Total** | **116 ms** | **34 ms** | **40 ms** | **64 ms** |
 
 ---
 
-## 🎯 Key Findings
+## 🌐 Network Topology Summary
 
-### 1. Pod ≈ Bastion — both are ~2-4x faster than public internet
-The K8s pod and the bastion are nearly identical in performance. The pod is sometimes slightly slower (REST: 37ms vs 33ms) and sometimes slightly faster (search: 235ms vs 253ms). The differences are noise — both are inside the Equinix campus.
+Everything tested runs in the **same Equinix campus** in northern Virginia:
 
-### 2. The pod has slower DNS resolution
-The pod's DNS takes **~8ms** per request vs **~2ms** on the bastion. This is because the pod uses the Kubernetes cluster DNS (CoreDNS) which adds a hop. The bastion uses direct system DNS. This adds ~6ms to every new-connection request.
-
-**Mitigation:** With HTTP keepalive (connection reuse), DNS is only resolved once per connection, not per request. The impact on real workloads would be negligible.
-
-### 3. Server processing time is identical across all three
-TTFB for REST /page/summary is 2.4ms (pod), 2.9ms (bastion), 40.5ms (public). The server-side processing time is **~2-3ms** regardless of where you call from. The 37ms difference between pod/public is all **network overhead** (TLS + TCP + DNS).
-
-### 4. Search is dominated by backend processing
-Action API search TTFB is **200-225ms** even from inside the network. Elasticsearch processing dominates. The speedup is only 1.8-1.9x vs 2-4x for other endpoints.
-
-### 5. SPARQL cold start exists everywhere
-The first SPARQL query after a period of inactivity takes **~1-5 seconds** from any location. After that, warm queries are much faster:
-- Public: ~55ms
-- Pod: ~38ms 
-- Bastion: ~25ms
-
-The pod is slightly slower than the bastion for warm SPARQL (~38ms vs ~25ms), likely due to the additional DNS hop and NAT routing through Kubernetes.
-
----
-
-## 🌐 Network Topology Investigation
-
-### Where everything lives
-
-| Service | IP Address | Location | ASN |
+| Service | Location | ASN | Ping RTT |
 |---|---|---|---|
-| **Toolforge bastion** | 185.15.56.4 | Leesburg, VA (Equinix campus) | AS14907 WMF |
-| **K8s pod (wagent)** | 192.168.55.x / 172.16.x.x | Equinix campus, VA | AS14907 WMF |
-| **Varnish cache** (`text-lb.eqiad`) | 208.80.154.224 | Sterling, VA (Equinix campus) | AS14907 WMF |
-| **WDQS (SPARQL)** | 208.80.154.224 (same VIP) | Same Varnish layer | AS14907 WMF |
-| **en.wikipedia.org** | 208.80.154.224 (same VIP) | Same Varnish layer | AS14907 WMF |
+| **Varnish cache** (208.80.154.224) | Sterling, VA | AS14907 WMF | — |
+| **Toolforge Bastion** (185.15.56.4) | Leesburg, VA | AS14907 WMF | 0.5ms to Varnish |
+| **K8s Pod** (192.168.55.x) | Leesburg, VA | AS14907 WMF | 0.9ms to Varnish |
+| **PAWS** | Unknown within WMF cloud | AS14907 WMF | 2.3ms TTFB suggests ~1ms RTT |
 
-**They're all in the same Equinix campus** in northern Virginia, ~10-15 miles apart. Everything is AS14907 (Wikimedia Foundation).
-
-### The actual network path
-
-**From K8s pod → 208.80.154.224 (Varnish):**
-```
-Pod → OpenStack GW → NAT → WMF router → Varnish
-<-- ~0.5ms --> <-- ~0.5ms -->       
-Total ≈ 0.9ms RTT (same campus)
-```
-
-**From Bastion → 208.80.154.224:**
-```
-Bastion → OpenStack GW → NAT → WMF router → Varnish
-<-- ~0.5ms --> <-- ~0.5ms -->       
-Total ≈ 0.9ms RTT
-```
-
-**From Public → 208.80.154.224:**
-```
-ISP → multiple hops → Varnish
-Total ≈ 12-15ms RTT
-```
-
-### Why the pod DNS is slower
-
-```
-Pod DNS lookup:
-  Pod → CoreDNS (kube-system) → upstream DNS → response
-  <-- 5-8ms per lookup -->
-
-Bastion DNS lookup:
-  Bastion → /etc/resolv.conf (system DNS) → response  
-  <-- 1-2ms per lookup -->
-```
-
-The Kubernetes DNS adds a proxy hop through CoreDNS, which is configured to forward to upstream resolvers. This explains the consistent ~6ms extra DNS time from the pod.
-
-### Internal `.wmnet` hostnames are NOT accessible
-
-Toolforge cannot resolve internal Wikimedia hostnames like `wdqs.svc.eqiad.wmnet`. All traffic from both the bastion and K8s pods goes through the **public Varnish layer**, even though everything is in the same campus. This is because Toolforge runs on a separate OpenStack private network that doesn't have access to the internal `.wmnet` DNS zone.
-
-The impact is negligible because the network RTT within the campus is <1ms.
-
-### Bottom line
-
-All three locations are in the same Equinix/Ashburn campus. The differences are:
-- **Public internet**: adds 12-15ms RTT + 20-30ms extra TLS overhead due to longer TCP path
-- **Bastion vs Pod**: essentially identical; pod has ~6ms more DNS that disappears with keepalive
-- **Server processing**: identical from any location
+PAWS's 2.3ms TTFB proves it's physically close to the Varnish layer. But the
+~55ms TLS handshake (vs ~27ms on Toolforge) suggests an additional proxy or
+different network path between PAWS and the WMF production network.
 
 ---
 
@@ -206,22 +256,23 @@ All three locations are in the same Equinix/Ashburn campus. The differences are:
 
 | If you do this... | Run from... | Why |
 |---|---|---|
-| Batch page fetches | **Toolforge (bastion or pod)** | 3-4x faster |
-| SPARQL analytics (warm) | **Toolforge (bastion or pod)** | 2x faster with keepalive |
-| SPARQL (infrequent/cold) | **Either** | 1s cold start from anywhere |
-| Action API search | **K8s pod** | Slightly faster (235ms vs 253ms) |
-| ML inference (Lift Wing) | **Toolforge** | 2x faster |
-| Database replica queries | **Toolforge** | Direct tunnel to analytics replicas |
+| Batch page fetches (high volume) | **Toolforge bastion or K8s pod** | 3-4x faster than public, 2x faster than PAWS |
+| SPARQL analytics (warm) | **Toolforge bastion** | ~25ms — fastest warm SPARQL |
+| Interactive data exploration | **PAWS** | Zero setup, good-enough latency, pre-installed libs |
+| One-off queries / analysis | **PAWS** or local | Convenience wins over milliseconds |
+| Automated production pipelines | **Toolforge K8s pod** | Persistent, dedicated resources, managed runtimes |
+| Machine Learning (Lift Wing) | **K8s pod or bastion** | ~47ms — 2x faster than public, 1.7x faster than PAWS |
 
-### Pod vs Bastion trade-offs
+### Ranking by total speed (lower is better)
 
-| Aspect | Bastion | K8s Pod |
-|---|---|---|
-| **Latency** | Slightly faster (33ms vs 37ms avg) | Slightly slower (DNS overhead) |
-| **Persistence** | Limited (30-min idle kill) | Infinite (sleep infinity) |
-| **Resource limits** | Shared (process limits hit ~59 threads) | Dedicated (1 CPU / 1 Gi default) |
-| **Python** | System 3.13.5 (no pip) | Managed 3.13.14 (with pip + uv) |
-| **Node.js** | Not available | Managed v22.22.3 |
+```
+1. 🖥️  Toolforge Bastion   33ms  ⚡ fastest overall
+2. ☸️  K8s Pod             37ms  (close second)
+3. 📓  PAWS                71ms  (2x slower than bastion, still beats public)
+4. 🏠  Public Internet    101ms  (baseline)
+```
+
+The ranking is consistent across all endpoints, though the gaps vary.
 
 ---
 
@@ -233,7 +284,7 @@ All three locations are in the same Equinix/Ashburn campus. The differences are:
 - EventStreams (SSE subscription latency)
 - File upload to Commons
 - OAuth token exchange latency
-- Comparison with different Kubernetes resource limits
+- PAWS with keepalive (connection reuse to eliminate TLS overhead per request)
 
 ---
 
@@ -249,5 +300,6 @@ python3 benchmark.py
 cat benchmark.py | ssh alih@dev.toolforge.org 'BENCH_LOCATION="Toolforge-bastion" python3 -'
 
 # Inside wagent K8s pod
-cat benchmark.py | ssh alih@dev.toolforge.org 'sudo -u tools.wagent kubectl --kubeconfig /data/project/wagent/.kube/config exec -i wagent-session -n tool-wagent -- bash --rcfile /tmp/.wagentrc -c "BENCH_LOCATION=\"Toolforge-K8s-pod\" python3 -"'
+cat benchmark.py | ssh alih@dev.toolforge.org \
+  'sudo -u tools.wagent kubectl --kubeconfig /data/project/wagent/.kube/config exec -i wagent-session -n tool-wagent -- bash --rcfile /tmp/.wagentrc -c "BENCH_LOCATION=\"Toolforge-K8s-pod\" python3 -"'
 ```

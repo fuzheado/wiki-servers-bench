@@ -54,16 +54,16 @@ This benchmark measures API latency from **all four environments** to answer:
 
 | Endpoint | Public Internet | Bastion | vs Public | K8s Pod | vs Public | PAWS | vs Public |
 |---|---|--:|--:|--:|--:|--:|--:|
-| 🔵 REST /page/summary | **101 ms** | **33 ms** | **3.1x** | **37 ms** | **2.7x** | **71 ms** | **1.4x** |
-| 🔵 REST /page/mobile-html (823KB) | **278 ms** | **64 ms** | **4.3x** | **70 ms** | **4.0x** | **99 ms** | **2.8x** |
-| 🟢 Action API query (extracts) | **228 ms** | **81 ms** | **2.8x** | **90 ms** | **2.5x** | **117 ms** | **1.9x** |
-| 🟢 Action API search | **450 ms** | **253 ms** | **1.8x** | **235 ms** | **1.9x** | **275 ms** | **1.6x** |
-| 🟡 Pageviews API | **116 ms** | **34 ms** | **3.4x** | **40 ms** | **2.9x** | **64 ms** | **1.8x** |
-| 🟠 Wikidata Entity (small, 501KB) | **410 ms** | **175 ms** | **2.3x** | **192 ms** | **2.1x** | **215 ms** | **1.9x** |
-| 🟠 Wikidata Entity (large, 309KB) | **320 ms** | **155 ms** | **2.1x** | **160 ms** | **2.0x** | **169 ms** | **1.9x** |
-| 🔴 Lift Wing ML | **105 ms** | **49 ms** | **2.1x** | **47 ms** | **2.2x** | **81 ms** | **1.3x** |
-| 🟣 SPARQL simple (warm) | **~55 ms** | **~25 ms** | **~2.2x** | **~38 ms** | **~1.4x** | **~60 ms** | **~0.9x** |
-| 🟣 SPARQL complex (warm) | **~55 ms** | **~25 ms** | **~2.2x** | **~40 ms** | **~1.4x** | **~65 ms** | **~0.8x** |
+| 🔵 REST /page/summary | 101 ms | 33 ms | **3.1x** | 37 ms | **2.7x** | 71 ms | **1.4x** |
+| 🔵 REST /page/mobile-html (823KB) | 278 ms | 64 ms | **4.3x** | 70 ms | **4.0x** | 99 ms | **2.8x** |
+| 🟢 Action API query (extracts) | 228 ms | 81 ms | **2.8x** | 90 ms | **2.5x** | 117 ms | **1.9x** |
+| 🟢 Action API search | 450 ms | 253 ms | **1.8x** | 235 ms | **1.9x** | 275 ms | **1.6x** |
+| 🟡 Pageviews API | 116 ms | 34 ms | **3.4x** | 40 ms | **2.9x** | 64 ms | **1.8x** |
+| 🟠 Wikidata Entity (small, 501KB) | 410 ms | 175 ms | **2.3x** | 192 ms | **2.1x** | 215 ms | **1.9x** |
+| 🟠 Wikidata Entity (large, 309KB) | 320 ms | 155 ms | **2.1x** | 160 ms | **2.0x** | 169 ms | **1.9x** |
+| 🔴 Lift Wing ML | 105 ms | 49 ms | **2.1x** | 47 ms | **2.2x** | 81 ms | **1.3x** |
+| 🟣 SPARQL simple (warm) | ~55 ms | ~25 ms | **~2.2x** | ~38 ms | **~1.4x** | ~60 ms | **~0.9x** |
+| 🟣 SPARQL complex (warm) | ~55 ms | ~25 ms | **~2.2x** | ~40 ms | **~1.4x** | ~65 ms | **~0.8x** |
 
 **Bottom line:** All three WMF-hosted environments outperform the public
 internet. The bastion and K8s pod consistently score best, while PAWS

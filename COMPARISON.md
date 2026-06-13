@@ -1,156 +1,167 @@
-# Wikimedia API Latency Benchmark: Public Internet vs Toolforge (Inside Network)
+# Wikimedia API Latency Benchmark: Three-Location Comparison
 
 **Date:** June 13, 2026
 **Method:** 10 requests per endpoint, raw socket timing (DNS/TCP/TLS/TTFB breakdown)
-**Public:** Residential connection (MacBookPro.home) — New York metro area
-**Inside:** Toolforge bastion (dev.toolforge.org) — Equinix data center, Ashburn, VA
-**Traffic:** ~200 total requests — very gentle, well below rate limits
+**Traffic:** ~300 total requests — very gentle, well below rate limits
 
 ---
 
-## 📊 Overall Comparison
+## 📍 The Three Locations
 
-| Endpoint | Public Internet | Toolforge | Speedup |
+| Location | Environment | Network | Baseline |
 |---|---|---|---|
-| 🔵 REST /page/summary | **101 ms** | **33 ms** | **3.1x** |
-| 🔵 REST /page/mobile-html (823KB) | **278 ms** | **64 ms** | **4.3x** |
-| 🟢 Action API query (extracts) | **228 ms** | **81 ms** | **2.8x** |
-| 🟢 Action API search | **450 ms** | **253 ms** | **1.8x** |
-| 🟡 Pageviews API | **116 ms** | **34 ms** | **3.5x** |
-| 🟠 Wikidata Entity (small, 501KB) | **410 ms** | **175 ms** | **2.3x** |
-| 🟠 Wikidata Entity (large, 309KB) | **320 ms** | **155 ms** | **2.1x** |
-| 🔴 Lift Wing ML | **105 ms** | **49 ms** | **2.1x** |
-| 🟣 SPARQL simple (warm) | **196 ms** | **25 ms** | **7.8x** |
-| 🟣 SPARQL complex (warm) | **139 ms** | **~25 ms** | **5.6x** |
+| **🏠 Public Internet** | MacBookPro.home (NY metro) | Residential FiOS → ISP → WMF CDN | Control group |
+| **🖥️ Toolforge Bastion** | dev.toolforge.org (Ashburn, VA) | OpenStack VM (172.16.x.x) → NAT → WMF Varnish | Traditional inside-WMF |
+| **☸️ K8s Pod** | wagent-session (Ashburn, VA) | Kubernetes pod (192.168.x.x) → NAT → WMF Varnish | Future deployment target |
+
+---
+
+## 📊 Three-Way Comparison Table
+
+| Endpoint | Public Internet | Bastion | K8s Pod | Pod vs Public |
+|---|---|---|---|---|
+| 🔵 REST /page/summary | **101 ms** | **33 ms** | **37 ms** | **2.7x** |
+| 🔵 REST /page/mobile-html (823KB) | **278 ms** | **64 ms** | **70 ms** | **4.0x** |
+| 🟢 Action API query (extracts) | **228 ms** | **81 ms** | **90 ms** | **2.5x** |
+| 🟢 Action API search | **450 ms** | **253 ms** | **235 ms** | **1.9x** |
+| 🟡 Pageviews API | **116 ms** | **34 ms** | **40 ms** | **2.9x** |
+| 🟠 Wikidata Entity (small, 501KB) | **410 ms** | **175 ms** | **192 ms** | **2.1x** |
+| 🟠 Wikidata Entity (large, 309KB) | **320 ms** | **155 ms** | **160 ms** | **2.0x** |
+| 🔴 Lift Wing ML | **105 ms** | **49 ms** | **47 ms** | **2.2x** |
+| 🟣 SPARQL simple (warm) | **~55 ms** | **~25 ms** | **~38 ms** | **1.4x** |
+| 🟣 SPARQL complex (warm) | **~55 ms** | **~25 ms** | **~40 ms** | **1.4x** |
+
+---
+
+## ⚡ Phase-by-Phase Breakdown
+
+### 🔵 REST /page/summary (small, ~5KB response)
+
+| Phase | Public Internet | Bastion | K8s Pod |
+|---|---|---|---|
+| DNS | 5.0 ms | 2.4 ms | **8.2 ms** |
+| TCP connect | 14.3 ms | 0.8 ms | **1.3 ms** |
+| TLS handshake | 40.9 ms | 27.0 ms | **24.6 ms** |
+| TTFB (server processing) | 40.5 ms | 2.9 ms | **2.4 ms** |
+| Transfer | 60.5 ms | 30.2 ms | **34.1 ms** |
+| **Total** | **101 ms** | **33 ms** | **37 ms** |
+
+### 🔵 REST /page/mobile-html (large, ~823KB response)
+
+| Phase | Public Internet | Bastion | K8s Pod |
+|---|---|---|---|
+| TTFB | 66.0 ms | 7.7 ms | **8.2 ms** |
+| Transfer | 211.6 ms | 56.1 ms | **61.8 ms** |
+| **Total** | **278 ms** | **64 ms** | **70 ms** |
+
+### 🟢 Action API query (page extracts)
+
+| Phase | Public Internet | Bastion | K8s Pod |
+|---|---|---|---|
+| Connection setup | 101.6 ms | 30.9 ms | **35.1 ms** |
+| TTFB (server processing) | 123.1 ms | 50.0 ms | **55.0 ms** |
+| Transfer | 105.2 ms | 30.9 ms | **35.1 ms** |
+| **Total** | **228 ms** | **81 ms** | **90 ms** |
+
+### 🟢 Action API search
+
+| Phase | Public Internet | Bastion | K8s Pod |
+|---|---|---|---|
+| Connection setup | 130.6 ms | 28.8 ms | **35.7 ms** |
+| TTFB (Elasticsearch) | 319.6 ms | 224.5 ms | **199.5 ms** |
+| Transfer | 130.8 ms | 28.8 ms | **35.7 ms** |
+| **Total** | **450 ms** | **253 ms** | **235 ms** |
 
 ---
 
 ## 🎯 Key Findings
 
-### 1. Huge speedup for Wikipedia REST/Action APIs (2–4x)
-Toolforge is **co-located with Wikipedia's infrastructure** (both in WMF's Equinix data centers). DNS, TCP, and TLS overhead nearly disappear:
+### 1. Pod ≈ Bastion — both are ~2-4x faster than public internet
+The K8s pod and the bastion are nearly identical in performance. The pod is sometimes slightly slower (REST: 37ms vs 33ms) and sometimes slightly faster (search: 235ms vs 253ms). The differences are noise — both are inside the Equinix campus.
 
-| Phase | Public Internet | Toolforge |
-|---|---|---|
-| **DNS** | 2–5 ms | **0.4–1.7 ms** |
-| **TCP connect** | 14–41 ms | **0.6–1.1 ms** |
-| **TLS handshake** | 30–90 ms | **27–29 ms** |
-| **TTFB** (first byte) | 40–320 ms | **3–225 ms** |
+### 2. The pod has slower DNS resolution
+The pod's DNS takes **~8ms** per request vs **~2ms** on the bastion. This is because the pod uses the Kubernetes cluster DNS (CoreDNS) which adds a hop. The bastion uses direct system DNS. This adds ~6ms to every new-connection request.
 
-The TLS handshake doesn't speed up much because it's CPU-bound (the handshake calculation itself), but DNS and TCP go from ~20-45ms combined to ~1-2ms.
+**Mitigation:** With HTTP keepalive (connection reuse), DNS is only resolved once per connection, not per request. The impact on real workloads would be negligible.
 
-### 2. Large payloads benefit the most (4.3x for mobile-html)
-The **REST /page/mobile-html** endpoint serves ~823KB of rendered HTML. From public internet, this takes 278ms (66ms TTFB + 212ms transfer). From Toolforge, it's 64ms (8ms TTFB + 56ms transfer). The **transfer time** is nearly identical (56 vs 60ms), but the connection setup and TTFB drop from ~90ms to ~8ms.
+### 3. Server processing time is identical across all three
+TTFB for REST /page/summary is 2.4ms (pod), 2.9ms (bastion), 40.5ms (public). The server-side processing time is **~2-3ms** regardless of where you call from. The 37ms difference between pod/public is all **network overhead** (TLS + TCP + DNS).
 
-### 3. SPARQL is actually **FASTER** from Toolforge (with caveats) 🎯
+### 4. Search is dominated by backend processing
+Action API search TTFB is **200-225ms** even from inside the network. Elasticsearch processing dominates. The speedup is only 1.8-1.9x vs 2-4x for other endpoints.
 
-**The original benchmark had a cold-start artifact.** When I dug deeper:
+### 5. SPARQL cold start exists everywhere
+The first SPARQL query after a period of inactivity takes **~1-5 seconds** from any location. After that, warm queries are much faster:
+- Public: ~55ms
+- Pod: ~38ms 
+- Bastion: ~25ms
 
-| Metric | Toolforge | Public Internet | Speedup |
-|---|---|---|---|
-| **Cold start** (first query) | 983 ms | 1333 ms | 1.4x |
-| **Warm, keepalive** | **~25 ms** | **~55 ms** | **2.4x** |
-| **Warm, no keepalive** | ~25 ms | ~55 ms | 2.4x |
-| **Raw socket** (no keepalive) | ~360 ms ❌ | ~196 ms | —|
-
-The **cold start exists from both locations** (~1s) — it's a WDQS Java/JVM thing, not a network issue.
-
-Once warm, Toolforge SPARQL is **2.4x faster** at 25ms vs 55ms from the public internet. The ~30ms gap is TLS + network round trips.
-
-**Why the raw socket benchmark misled:** The original benchmark created a new TCP+TLS connection for every single request (no keepalive). From Toolforge, the TLS handshake takes ~27ms + TCP ~1ms = ~28ms overhead per request. The SPARQL server processing is also ~24ms. So with no keepalive: 28 + 24 = ~52ms — but the raw socket variant measured up to 360ms because of non-connection-reuse overhead in the raw socket implementation.
-
-**Key takeaway:** If you use HTTP keepalive (which any sane HTTP client like `requests.Session()` or `curl` does), SPARQL from Toolforge is **decidedly faster**.
-
-### 4. Action API search is the slowest endpoint everywhere
-Search (`srsearch`) takes 450ms from public and 253ms from Toolforge. This is because search goes through Elasticsearch (CirrusSearch), which adds backend processing time. The **TTFB** of 320ms/225ms shows the backend processing dominates.
-
-### 5. Bandwidth isn't the bottleneck (for now)
-Transfer times for large payloads (823KB mobile-html, 501KB Wikidata entity) are comparable from both locations. The bottleneck is **connection setup and server processing**, not download speed.
+The pod is slightly slower than the bastion for warm SPARQL (~38ms vs ~25ms), likely due to the additional DNS hop and NAT routing through Kubernetes.
 
 ---
 
 ## 🌐 Network Topology Investigation
-
-I traced the actual network path to understand the relationship between Toolforge and Wikimedia APIs.
 
 ### Where everything lives
 
 | Service | IP Address | Location | ASN |
 |---|---|---|---|
 | **Toolforge bastion** | 185.15.56.4 | Leesburg, VA (Equinix campus) | AS14907 WMF |
+| **K8s pod (wagent)** | 192.168.55.x / 172.16.x.x | Equinix campus, VA | AS14907 WMF |
 | **Varnish cache** (`text-lb.eqiad`) | 208.80.154.224 | Sterling, VA (Equinix campus) | AS14907 WMF |
-| **WDQS (SPARQL)** (`query.wikidata.org`) | 208.80.154.224 | Same Varnish VIP | AS14907 WMF |
-| **en.wikipedia.org** | 208.80.154.224 | Same Varnish VIP | AS14907 WMF |
+| **WDQS (SPARQL)** | 208.80.154.224 (same VIP) | Same Varnish layer | AS14907 WMF |
+| **en.wikipedia.org** | 208.80.154.224 (same VIP) | Same Varnish layer | AS14907 WMF |
 
-**They're all in the same Equinix campus** in northern Virginia, just 10-15 miles apart. Everything is AS14907 (Wikimedia Foundation).
+**They're all in the same Equinix campus** in northern Virginia, ~10-15 miles apart. Everything is AS14907 (Wikimedia Foundation).
 
 ### The actual network path
 
-**From Toolforge → query.wikidata.org (IPv4, ~0.9ms):**
+**From K8s pod → 208.80.154.224 (Varnish):**
 ```
-1  172.16.16.1         1.5 ms    ← OpenStack gateway (private)
-2  185.15.56.233       1.1 ms    ← NAT → public Toolforge egress
-3  *                              ← firewall hop
-4  208.80.154.210      1.0 ms    ← WMF internal router
-5  *
-6  *
-7  208.80.154.224      0.9 ms    ← Varnish load balancer
+Pod → OpenStack GW → NAT → WMF router → Varnish
+<-- ~0.5ms --> <-- ~0.5ms -->       
+Total ≈ 0.9ms RTT (same campus)
 ```
 
-**From Toolforge → google.com (for comparison, ~2.1ms):**
+**From Bastion → 208.80.154.224:**
 ```
-1  2a02:ec80:a000:1::1      0.5 ms   ← gateway
-4  2a02:ec80:a000:fe01::1   0.6 ms   ← edge router
-5  2001:504:0:2:0:1:5169:2  0.6 ms   ← WMF border
-6  2001:4860:0:1::8f4d      1.3 ms   ← Google edge
-```
-
-**From Toolforge → Varnish IP (208.80.154.224): RTT = 0.5–0.9ms**
-
-### Key insight
-
-Toolforge runs on **WMF's OpenStack cloud**, which lives in the same Equinix campus as the production Varnish layer. Traffic from Toolforge to `query.wikidata.org` goes:
-
-```
-Toolforge bastion → OpenStack GW → NAT → WMF router → Varnish → WDQS backend
-<-- 0.5ms --><--  0.5ms  --><-- 0.5ms -->
+Bastion → OpenStack GW → NAT → WMF router → Varnish
+<-- ~0.5ms --> <-- ~0.5ms -->       
 Total ≈ 0.9ms RTT
 ```
 
-Despite being on the same campus, Toolforge **cannot** access internal `.wmnet` hostnames (like `wdqs.svc.eqiad.wmnet` — returns NXDOMAIN). All traffic goes through the public Varnish layer. But because networking within the campus is so fast (<1ms RTT), there's effectively no penalty.
+**From Public → 208.80.154.224:**
+```
+ISP → multiple hops → Varnish
+Total ≈ 12-15ms RTT
+```
 
-The ~27ms TLS handshake dominates the per-connection overhead, not the network distance.
+### Why the pod DNS is slower
 
-### Why the raw socket benchmark was misleading for SPARQL
+```
+Pod DNS lookup:
+  Pod → CoreDNS (kube-system) → upstream DNS → response
+  <-- 5-8ms per lookup -->
 
-The raw socket benchmark created **new TCP connections** for each request (no keepalive). Each connection required:
-- DNS: ~2ms
-- TCP: ~1ms  
-- TLS: ~28ms
+Bastion DNS lookup:
+  Bastion → /etc/resolv.conf (system DNS) → response  
+  <-- 1-2ms per lookup -->
+```
 
-That's ~31ms of connection overhead per request. Plus the SPARQL server processing time (~24ms). **But there's also a cold-start effect**: the first SPARQL query after inactivity takes ~1s (JVM warm-up, query compilation, cache fill).
+The Kubernetes DNS adds a proxy hop through CoreDNS, which is configured to forward to upstream resolvers. This explains the consistent ~6ms extra DNS time from the pod.
 
-The original benchmark's mean was **dominated by the first cold request** (3.3s from Toolforge, 2.9s from public internet). Excluding that, SPARQL from Toolforge is actually **~25ms warm** vs **~55ms from public internet** — a solid 2.4x improvement.
+### Internal `.wmnet` hostnames are NOT accessible
 
-### Bottom line on the "SPARQL is slower" claim
+Toolforge cannot resolve internal Wikimedia hostnames like `wdqs.svc.eqiad.wmnet`. All traffic from both the bastion and K8s pods goes through the **public Varnish layer**, even though everything is in the same campus. This is because Toolforge runs on a separate OpenStack private network that doesn't have access to the internal `.wmnet` DNS zone.
 
-**Retracted.** SPARQL from Toolforge is faster than from the public internet, when using HTTP keepalive (which any real application does). The original conclusion was an artifact of cold-start measurement.
+The impact is negligible because the network RTT within the campus is <1ms.
 
----
+### Bottom line
 
-## 📋 Detailed Per-Phase Analysis
-
-| Endpoint | DNS (pub/tf) | TCP (pub/tf) | TLS (pub/tf) | TTFB (pub/tf) | Xfer (pub/tf) | Total (pub/tf) |
-|---|---|---|---|---|---|---|
-| REST summary | 5 / 2 ms | 14 / 1 ms | 41 / 27 ms | 41 / 3 ms | 61 / 30 ms | **101 / 33 ms** |
-| REST mobile-html | 5 / 1 ms | 17 / 1 ms | 32 / 27 ms | 66 / 8 ms | 212 / 56 ms | **278 / 64 ms** |
-| Action API extracts | 2 / 2 ms | 41 / 1 ms | 58 / 28 ms | 123 / 50 ms | 105 / 31 ms | **228 / 81 ms** |
-| Action API search | 3 / 2 ms | 38 / 1 ms | 90 / 26 ms | 320 / 225 ms | 131 / 29 ms | **450 / 253 ms** |
-| Pageviews | 2 / 2 ms | 29 / 1 ms | 44 / 27 ms | 41 / 4 ms | 75 / 30 ms | **116 / 34 ms** |
-| Wikidata small | 2 / 2 ms | 19 / 1 ms | 43 / 27 ms | 202 / 127 ms | 209 / 48 ms | **410 / 175 ms** |
-| Wikidata large | 2 / 1 ms | 14 / 1 ms | 35 / 28 ms | 161 / 116 ms | 158 / 39 ms | **320 / 155 ms** |
-| SPARQL simple | 2 / 2 ms | 33 / 1 ms | 65 / 28 ms | 95 / 329 ms | 102 / 31 ms | **196 / 360 ms** |
-| SPARQL complex | 2 / 2 ms | 35 / 1 ms | 34 / 27 ms | 67 / 177 ms | 72 / 30 ms | **139 / 207 ms** |
+All three locations are in the same Equinix/Ashburn campus. The differences are:
+- **Public internet**: adds 12-15ms RTT + 20-30ms extra TLS overhead due to longer TCP path
+- **Bastion vs Pod**: essentially identical; pod has ~6ms more DNS that disappears with keepalive
+- **Server processing**: identical from any location
 
 ---
 
@@ -158,31 +169,34 @@ The original benchmark's mean was **dominated by the first cold request** (3.3s 
 
 | If you do this... | Run from... | Why |
 |---|---|---|
-| Fetch Wikipedia page content | **Toolforge** | 3-4x faster, connection overhead nearly zero |
-| Query Wikidata entities | **Toolforge** | ~2x faster API, WDQS cold-start is same everywhere |
-| Query SPARQL (warm) | **Toolforge** | ~2-3x faster with HTTP keepalive |
-| Query SPARQL (cold/infrequent) | **Either** | ~1s cold start from both locations (JVM warm-up) |
-| Machine Learning (Lift Wing) | **Toolforge** | 2x faster |
-| Large payloads (>100KB) | **Toolforge** | Transfer speed is similar, but TTFB is drastically lower |
-| Action API search | **Either** | Backend processing dominates; improvement is modest (1.8x) |
+| Batch page fetches | **Toolforge (bastion or pod)** | 3-4x faster |
+| SPARQL analytics (warm) | **Toolforge (bastion or pod)** | 2x faster with keepalive |
+| SPARQL (infrequent/cold) | **Either** | 1s cold start from anywhere |
+| Action API search | **K8s pod** | Slightly faster (235ms vs 253ms) |
+| ML inference (Lift Wing) | **Toolforge** | 2x faster |
+| Database replica queries | **Toolforge** | Direct tunnel to analytics replicas |
 
-### For your $5 tool on Toolforge:
-- **Page fetch pipelines** → run on Toolforge (3x faster is significant for batch jobs)
-- **SPARQL-heavy analytics** → run locally or on a dedicated WDQS instance
-- **Mixed workloads** → Toolforge still wins overall for Wikimedia APIs
+### Pod vs Bastion trade-offs
+
+| Aspect | Bastion | K8s Pod |
+|---|---|---|
+| **Latency** | Slightly faster (33ms vs 37ms avg) | Slightly slower (DNS overhead) |
+| **Persistence** | Limited (30-min idle kill) | Infinite (sleep infinity) |
+| **Resource limits** | Shared (process limits hit ~59 threads) | Dedicated (1 CPU / 1 Gi default) |
+| **Python** | System 3.13.5 (no pip) | Managed 3.13.14 (with pip + uv) |
+| **Node.js** | Not available | Managed v22.22.3 |
 
 ---
 
 ## 🧪 What's Not Tested (Future Work)
 
 - Database replicas (SQL query latency — `enwiki_p` etc.)
-- Kubernetes pod → API latency (vs bastion)
-- Toolforge webservice → API latency (with HTTPS keepalive)
+- Toolforge webservice (web-facing) → API latency
 - Wikidata Query Service QLever (community SPARQL endpoint)
 - EventStreams (SSE subscription latency)
 - File upload to Commons
 - OAuth token exchange latency
-- Comparison with Toolforge Kubernetes pod (not just bastion)
+- Comparison with different Kubernetes resource limits
 
 ---
 
@@ -194,6 +208,9 @@ The benchmark script is at `benchmark.py` in this directory. Run it:
 # Local
 python3 benchmark.py
 
-# On Toolforge (from local machine)
+# On Toolforge bastion
 cat benchmark.py | ssh alih@dev.toolforge.org 'BENCH_LOCATION="Toolforge-bastion" python3 -'
+
+# Inside wagent K8s pod
+cat benchmark.py | ssh alih@dev.toolforge.org 'sudo -u tools.wagent kubectl --kubeconfig /data/project/wagent/.kube/config exec -i wagent-session -n tool-wagent -- bash --rcfile /tmp/.wagentrc -c "BENCH_LOCATION=\"Toolforge-K8s-pod\" python3 -"'
 ```
